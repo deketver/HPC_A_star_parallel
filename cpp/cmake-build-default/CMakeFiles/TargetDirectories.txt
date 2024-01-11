@@ -1,3 +1,0 @@
-C:/Users/veron/Documents/UniTn/HPC/github/HPC_A_star_parallel/cpp/cmake-build-default/CMakeFiles/cpp.dir
-C:/Users/veron/Documents/UniTn/HPC/github/HPC_A_star_parallel/cpp/cmake-build-default/CMakeFiles/edit_cache.dir
-C:/Users/veron/Documents/UniTn/HPC/github/HPC_A_star_parallel/cpp/cmake-build-default/CMakeFiles/rebuild_cache.dir
