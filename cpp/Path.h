@@ -7,11 +7,11 @@ using namespace std;
 
 class Path {
     int total_cost;
-    vector<Node*> nodes;
+    vector<shared_ptr<Node>> nodes;
 public:
-    Path(Node& last_node);
+    explicit Path(Node& last_node); //Node& last_node
     int getTotalCost();
-    vector<Node*> getPath();
+    vector<shared_ptr<Node>> getPath();
     void print();
 };
 

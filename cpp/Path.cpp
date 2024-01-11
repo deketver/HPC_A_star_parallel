@@ -1,16 +1,17 @@
 #include "Path.h"
 
 Path::Path(Node& last_node) {
-    this->total_cost = last_node.getF_cost();
+    this->total_cost = last_node.getCost();
     if (this->total_cost == -1)
     {
         this->nodes = {};
     }
     else {
-        Node* current_node = &last_node;
-        while (current_node != nullptr) {
-            this->nodes.push_back(current_node);
-            current_node = current_node->getParent();
+        this->nodes.push_back(make_shared<Node>(last_node));
+        shared_ptr<Node> new_node = last_node.getParent();
+        while (new_node != nullptr) {
+            this->nodes.push_back(new_node);
+            new_node = new_node->getParent();
         }
     }
 
@@ -20,9 +21,11 @@ int Path::getTotalCost() {
     return this->total_cost;
 }
 
-vector<Node*> Path::getPath() {
+vector<shared_ptr<Node>> Path::getPath() {
     return this->nodes;
 }
+
+
 
 void Path::print() {
     if (this->nodes.empty()) {
@@ -30,8 +33,12 @@ void Path::print() {
         return;
     }
     cout << "Path: " << endl;
+    // print the whole vector as a vector
+    cout << "Coordinates " << endl;
     for (int i = this->nodes.size() - 1; i >= 0; i--) {
-        cout << this->nodes[i];
+        //cout << "Action " << (*this->nodes[i]).getAction().dx << " " << (*this->nodes[i]).getAction().dy << endl;
+        cout << "[" <<(*this->nodes[i]).getCoordinates().x << ", " << (*this->nodes[i]).getCoordinates().y << "]";
     }
-    cout << "Total cost: " << this->total_cost << endl;
+
+    cout << "\nTotal cost: " << this->total_cost << endl;
 }

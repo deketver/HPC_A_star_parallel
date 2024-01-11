@@ -84,8 +84,10 @@ Path Astar_search::search() {
         visited[current_node.getCoordinates().x][current_node.getCoordinates().y] = true;
 
         if (this->isGoal(current_node)) {
-            cout << "Found solution";
+            cout << "Found solution" << endl;
             return Path(current_node);
+
+
         }
 
         int f_cost = current_node.getF_cost();
@@ -96,7 +98,7 @@ Path Astar_search::search() {
             Coordinates new_coordinates = this->getResult(current_node.getCoordinates(), action);
             int new_cost = current_node.getCost() + this->cost(new_coordinates);
             int new_f_cost = new_cost + this->estimate(new_coordinates);
-            Node new_node = Node(new_coordinates, new_cost, new_f_cost, action, &current_node);
+            Node new_node = Node(new_coordinates, new_cost, new_f_cost, action, make_shared<Node>(current_node)); //return Path(std::make_shared<Node>(current_node));
             queue.push(new_node);
         }
     }

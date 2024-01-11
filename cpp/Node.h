@@ -1,4 +1,6 @@
 #pragma once
+
+#include <memory>
 using namespace std;
 
 struct Coordinates {
@@ -49,15 +51,15 @@ class Node {
     int cost;
     int f_cost;
     Action action{};
-    Node* parent = nullptr;
+    shared_ptr<Node> parent;
 public:
-    Node(Coordinates coordinates, int cost, int f_cost, Action action, Node* parent);
+    Node(Coordinates coordinates, int cost, int f_cost, Action action, shared_ptr<Node> parent);
     ~Node();
     Coordinates getCoordinates() const;
     int getCost() const;
     int getF_cost() const;
     Action getAction() const;
-    Node* getParent();
+    shared_ptr<Node> getParent() const;
     bool operator<(const Node& other) const;
     bool operator>(const Node& other) const;
     bool operator==(const Node& other) const;

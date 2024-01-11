@@ -3,17 +3,17 @@
 
 using namespace std;
 
-Node::Node(Coordinates coordinates, int cost, int f_cost, Action action, Node* parent) {
+Node::Node(Coordinates coordinates, int cost, int f_cost, Action action, shared_ptr<Node> parent) {
     this->coordinates = coordinates;
     this->cost = cost;
     this->f_cost = f_cost;
     this->action = action;
     this->parent = parent;
-    if (parent != nullptr){
-        cout << "Parrent was" << parent << endl;
-        cout << "Parrant coordinates" << parent->getCoordinates().x << " " << parent->getCoordinates().y << endl;
-        cout << "New position" << coordinates.x << " " << coordinates.y << endl;
-    }
+//    if (parent != nullptr){
+//        cout << "Parrent was" << parent << endl;
+//        cout << "Parrant coordinates" << parent->getCoordinates().x << " " << parent->getCoordinates().y << endl;
+//        cout << "New position" << coordinates.x << " " << coordinates.y << endl;
+//    }
 
 }
 
@@ -33,7 +33,7 @@ Action Node::getAction() const {
     return this->action;
 }
 
-Node* Node::getParent() {
+shared_ptr<Node> Node::getParent() const {
     return this->parent;
 }
 
@@ -62,7 +62,7 @@ std::iostream& operator<<(std::iostream& os, Node& node) {
 }
 
 std::iostream& operator<<(std::iostream& os, Action& action) {
-    os << action.dx << action.dy << endl;
+    os << action.dy << " " << action.dx << endl;
     return os;
 }
 
