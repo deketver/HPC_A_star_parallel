@@ -25,8 +25,6 @@ vector<shared_ptr<Node>> Path::getPath() {
     return this->nodes;
 }
 
-
-
 void Path::print() {
     if (this->nodes.empty()) {
         cout << "No path found" << endl;
@@ -36,10 +34,14 @@ void Path::print() {
     // print the whole vector as a vector
     cout << "Coordinates " << endl;
     for (int i = this->nodes.size() - 1; i >= 0; i--) {
-        //cout << "Action " << (*this->nodes[i]).getAction().dx << " " << (*this->nodes[i]).getAction().dy << endl;
         cout << "[" <<(*this->nodes[i]).getCoordinates().x << "," << (*this->nodes[i]).getCoordinates().y << "] ";
     }
+}
 
-    cout << "\nTotal cost: " << this->total_cost << endl;
+void Path::print_path_len() const {
     cout << "Len of the path: " << this->nodes.size() << endl;
+}
+
+void Path::print_total_cost() const{
+    cout << "Total cost: " << this->total_cost << endl;
 }

@@ -13,5 +13,7 @@ public:
     int getTotalCost();
     vector<shared_ptr<Node>> getPath();
     void print();
+    void print_path_len() const ;
+    void print_total_cost() const;
 };
 

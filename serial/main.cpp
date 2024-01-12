@@ -1,16 +1,18 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <chrono>
 #include "Astar_search.h"
 #include "Path.h"
 #include "Node.h"
 
 
+
 using namespace std;
 int main() {
     // create imput map
-    int width = 3000;
-    int height = 2000;
+    int width = 5000;
+    int height = 5000;
     vector<vector<unsigned short>> map;
     for (int i = 0; i < height; i++) {
         vector<unsigned short> row;
@@ -28,14 +30,17 @@ int main() {
 //        cout << endl;
 //    }
     Coordinates start = Coordinates{ 0, 5 };
-    Coordinates goal = Coordinates{ 1558, 2588 };
+    Coordinates goal = Coordinates{ 4858, 4988 };
 
-    Astar_search problem = Astar_search(width, height, start, goal, map);
     cout << "start is " << map[start.x][start.y] << endl;
     cout << "finish is " << map[goal.x][goal.y] << endl;
+    chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+    Astar_search problem = Astar_search(width, height, start, goal, map);
     Path path = problem.search();
-    // got over constructor
-    path.print();
+    chrono::steady_clock::time_point end = chrono::steady_clock::now();
+    cout << "Time difference = " << chrono::duration_cast<chrono::seconds>(end - begin).count() << "[s]" << endl;
+    path.print_path_len();
+    path.print_total_cost();
 
     return 0;
 }

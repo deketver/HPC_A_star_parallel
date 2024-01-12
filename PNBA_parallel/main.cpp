@@ -8,6 +8,11 @@
 
 using namespace std;
 
+/*
+ * This algorithm approach uses only parallelization on 2 processes.
+ * Bidirectional search heuristic search.
+ * */
+
 int main() {
     // create imput map
     int width = 300;
@@ -44,12 +49,14 @@ int main() {
         Coordinates start = Coordinates{ 0, 5 };
         Coordinates goal = Coordinates{ 155, 258 };
 
-        Astar_search problem = Astar_search(width, height, start, goal, map);
         cout << "start is " << map[start.x][start.y] << endl;
         cout << "finish is " << map[goal.x][goal.y] << endl;
+
+        Astar_search problem = Astar_search(width, height, start, goal, map);
         Path path = problem.search();
-        // got over constructor
-        path.print();
+
+        path.print_path_len();
+        path.print_total_cost();
     }
     else{
         cout << "My rank is " << rank << endl;
