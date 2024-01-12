@@ -9,8 +9,8 @@
 using namespace std;
 int main() {
     // create imput map
-    int width = 2000;
-    int height = 1000;
+    int width = 3000;
+    int height = 2000;
     vector<vector<unsigned short>> map;
     for (int i = 0; i < height; i++) {
         vector<unsigned short> row;
@@ -28,7 +28,7 @@ int main() {
 //        cout << endl;
 //    }
     Coordinates start = Coordinates{ 0, 5 };
-    Coordinates goal = Coordinates{ 958, 1588 };
+    Coordinates goal = Coordinates{ 1558, 2588 };
 
     Astar_search problem = Astar_search(width, height, start, goal, map);
     cout << "start is " << map[start.x][start.y] << endl;
