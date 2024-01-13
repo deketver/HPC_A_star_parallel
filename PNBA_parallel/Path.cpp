@@ -41,8 +41,8 @@ vector<int> Path::getPathSend() {
     int len = this->path_len;
     std::vector<int> path_send(2 * len);
     for (int i = 0; i < this->path_len; i++) {
-        path_send[2*i] = this->coordinates[i].x;
-        path_send[2*i+1] = this->coordinates[i].y;
+        path_send.push_back(this->coordinates[i].x);
+        path_send.push_back(this->coordinates[i].y);
     }
     return path_send;
 }

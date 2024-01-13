@@ -97,11 +97,25 @@ int main() {
                 MPI_Send(coordinates, 2, MPI_INT, 1, 1, MPI_COMM_WORLD);
                 cout << "Found match with other process" << endl;
                 last_coordinates = current_node.getCoordinates();
+
+                // received data about other process search
+                //get len of the data vector first
                 int other_process_path_len;
                 MPI_Recv(&other_process_path_len, 1, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                int other_process_path[other_process_path_len];
-                MPI_Recv(&other_process_path, other_process_path_len, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                cout << "Received path is " << other_process_path_len << endl;
+                cout << "Path length is " << other_process_path_len << endl;
+
+                // get the whole path
+                std::vector<int> other_process_path(other_process_path_len);
+                MPI_Recv(&other_process_path[0], other_process_path_len, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+                cout << "Received path is " << endl;
+                for (int i = 0; i < other_process_path_len; i++){
+                    cout << other_process_path[i] << " ";
+                    if (i % 2 == 0){
+                        cout << endl;
+                    }
+
+                }
                 break;
             }
             else{
@@ -164,7 +178,7 @@ int main() {
                 int path_len = 2* path.getPathLen();
                 auto path_send = path.getPathSend();
                 MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
-                MPI_Send(&path_send, path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
                 break;
             }
 
