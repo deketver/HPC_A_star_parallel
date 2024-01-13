@@ -110,11 +110,10 @@ int main() {
 
                 cout << "Received path is " << endl;
                 for (int i = 0; i < other_process_path_len; i++){
-                    cout << other_process_path[i] << " ";
                     if (i % 2 == 0){
                         cout << endl;
                     }
-
+                    cout << other_process_path[i] << " ";
                 }
                 break;
             }
@@ -172,11 +171,20 @@ int main() {
 
             if(status.MPI_TAG == 1){
                 cout << "Got message about match, my process" << rank << endl;
+
                 // now try to match node to the other process coordinates, so you can reconstruct the path
                 // and send the message back to the other process
                 Path path = problem.find_in_explored_nodes(other_process_coordinates[0], other_process_coordinates[1]);
                 int path_len = 2* path.getPathLen();
-                auto path_send = path.getPathSend();
+                vector<int> path_send = path.getPathSend();
+                cout << "Vector I am sending: " << endl;
+                for (int i = 0; i < path_len; i++){
+                    if (i % 2 == 0){
+                        cout << endl;
+                    }
+                    cout << path_send[i] << " ";
+                }
+
                 MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
                 MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
                 break;
