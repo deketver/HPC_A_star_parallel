@@ -49,8 +49,8 @@ void read_path(const std::string& filename, Path& path) {
 
 int main() {
     // create imput map
-    int width = 500;
-    int height = 500;
+    int width = 100;
+    int height = 100;
     
     int world_size;
     int rank;
@@ -63,17 +63,21 @@ int main() {
     // get  common rank
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    Coordinates start = Coordinates{ 0, 5 };
-    Coordinates goal = Coordinates{ 484, 494 };
+    Coordinates start = Coordinates{ 0, 0 }; // 0, 5
+    Coordinates goal = Coordinates{ 99 , 99 }; //4984, 4994 
 
     vector<vector<unsigned short>> map;
 
     std::ostringstream filename;
-    filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/map_" << width << ".txt";
+    //filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/map_" << width << ".txt";
+    filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/100_100_sides" << ".txt";
     read_matrix(filename.str(), map);
 
     if( rank == 0){
 
+        cout << "start is " << map[start.x][start.y] << endl;
+        cout << "finish is " << map[goal.x][goal.y] << endl;
+        double t1 = MPI_Wtime();
         Astar_search problem = Astar_search(width, height, start, goal, map);
         problem.initialize();
         Coordinates last_coordinates = Coordinates{0, 0};
@@ -173,6 +177,9 @@ int main() {
 //        Path official_solution = Path();
 //        read_path(path_filename.str(), official_solution);
 //        cout << "Paths are same: " << (path == official_solution) << endl;
+        double t2 = MPI_Wtime();
+        cout << "Time difference " << t2 - t1 << endl;
+
     }
     else{
         Astar_search problem = Astar_search(width, height, goal, start, map);
