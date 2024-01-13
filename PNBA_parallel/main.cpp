@@ -121,7 +121,7 @@ int main() {
                 int other_process_cost;
                 MPI_Recv(&other_process_cost, 1, MPI_INT, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-                int final_cost = cost + other_process_cost + map[start.x][start.y] + map[goal.x][goal.y];
+                int final_cost = cost + other_process_cost + map[goal.x][goal.y];
 
 //                cout << "Cost on the goal " << map[goal.x][goal.y] << endl;
 //                cout << "Process " << rank << " cost was " << cost << endl;
