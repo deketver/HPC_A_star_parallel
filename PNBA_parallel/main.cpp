@@ -99,8 +99,8 @@ int main() {
                 last_coordinates = current_node.getCoordinates();
                 int other_process_path_len;
                 MPI_Recv(&other_process_path_len, 1, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                int other_process_path[2*other_process_path_len];
-                MPI_Recv(other_process_path, 2*other_process_path_len, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                int other_process_path[other_process_path_len];
+                MPI_Recv(&other_process_path, other_process_path_len, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 cout << "Received path is " << other_process_path_len << endl;
                 break;
             }
@@ -161,10 +161,10 @@ int main() {
                 // now try to match node to the other process coordinates, so you can reconstruct the path
                 // and send the message back to the other process
                 Path path = problem.find_in_explored_nodes(other_process_coordinates[0], other_process_coordinates[1]);
-                int path_len = path.getPathLen();
+                int path_len = 2* path.getPathLen();
                 auto path_send = path.getPathSend();
-                MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
-                MPI_Send(path_send, 2*path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                MPI_Send(path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                MPI_Send(path_send, path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
                 break;
             }
 

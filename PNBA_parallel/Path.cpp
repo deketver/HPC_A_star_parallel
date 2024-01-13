@@ -38,7 +38,8 @@ int Path::getPathLen() {
 }
 
 int Path::getPathSend() {
-    int path_send[2 * this->path_len] = {0};
+    int len = this->path_len;
+    int* path_send = new int[2*len];
     for (int i = 0; i < this->path_len; i++) {
         path_send[2*i] = this->coordinates[i].x;
         path_send[2*i+1] = this->coordinates[i].y;
