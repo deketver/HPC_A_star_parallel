@@ -96,6 +96,7 @@ void Astar_search::mark_other_process_visited(int x, int y){
 void Astar_search::expand_problem(Node& current_node){
     vector<Action> actions = this->getActions(current_node);
 
+
     for (Action action : actions) {
         Coordinates new_coordinates = this->getResult(current_node.getCoordinates(), action);
         int new_cost = current_node.getCost() + this->cost(new_coordinates);
@@ -105,6 +106,21 @@ void Astar_search::expand_problem(Node& current_node){
     }
 }
 
+
+void Astar_search::try_match_parent_current_node(Node& current_node,int other_process_x, int other_process_y){
+    if (current_node.getCoordinates().x == other_process_x && current_node.getCoordinates().y == other_process_y){
+        cout << "Direct match" << endl;
+    }
+    while(current_node.getParent() != nullptr){
+        shared_ptr<Node> parent = current_node.getParent();
+        if (parent->getCoordinates().x == other_process_x && parent->getCoordinates().y == other_process_y){
+            cout << "Found match with other process" << endl;
+            return;
+        }
+        current_node = *parent;
+    }
+    cout << "No match found" << endl;
+}
 
 Path Astar_search::search() {
     Node const start_node = Node(this->start, 0, 0, Action{ 0, 0 }, nullptr);

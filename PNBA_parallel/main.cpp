@@ -153,6 +153,8 @@ int main() {
             if(status.MPI_TAG == 1){
                 cout << "Got message about match, my process" << rank << endl;
                 // now try to match node to the other process coordinates, so you can reconstruct the path
+                // and send the message back to the other process
+                problem.try_match_parent_current_node(current_node, other_process_coordinates[0], other_process_coordinates[1]);
                 break;
             }
 

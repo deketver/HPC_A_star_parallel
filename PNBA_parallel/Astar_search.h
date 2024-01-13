@@ -41,5 +41,6 @@ public:
     void mark_visited(int x, int y); // marks the node as visited
     void mark_other_process_visited(int x, int y); // marks the node as visited
     void expand_problem(Node& current_node); // expands the problem by adding new nodes to the queue
+    void try_match_parent_current_node(Node& current_node,int other_process_x, int other_process_y);
 
 };
