@@ -67,8 +67,8 @@ void read_path(const std::string& filename, Path& path) {
 
 int main() {
     // create imput map
-    int width = 1000;
-    int height = 1000;
+    int width = 1500;
+    int height = 1500;
 //    vector<vector<unsigned short>> map;
 //    for (int i = 0; i < height; i++) {
 //        vector<unsigned short> row;
@@ -93,7 +93,7 @@ int main() {
 //        cout << endl;
 //    }
     Coordinates start = Coordinates{ 0, 5 };
-    Coordinates goal = Coordinates{ 984, 994 };
+    Coordinates goal = Coordinates{ 1484, 1494 };
 
     cout << "start is " << map[start.x][start.y] << endl;
     cout << "finish is " << map[goal.x][goal.y] << endl;

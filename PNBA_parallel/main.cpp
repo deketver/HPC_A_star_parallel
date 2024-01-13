@@ -112,10 +112,16 @@ int main() {
 
                 // cost of this part of the solution
                 Path path = Path(current_node);
-                int cost = path.getTotalCost(); //- map[current_node.getCoordinates().x][current_node.getCoordinates().y];
+                int cost = path.getTotalCost() - map[current_node.getCoordinates().x][current_node.getCoordinates().y];
 
-                cout << "Cost on the goal " << map[goal.x][goal.y] << endl;
-                cout << "Process " << rank << " cost was " << cost << endl;
+                int other_process_cost;
+                MPI_Recv(&other_process_cost, 1, MPI_INT, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+                int final_cost = cost + other_process_cost + map[start.x][start.y] + map[goal.x][goal.y];
+
+//                cout << "Cost on the goal " << map[goal.x][goal.y] << endl;
+//                cout << "Process " << rank << " cost was " << cost << endl;
+                cout << "Total final cost was: " << final_cost << endl;
 
                 break;
             }
@@ -136,12 +142,15 @@ int main() {
                 Path path = problem.find_in_explored_nodes(other_process_coordinates[0], other_process_coordinates[1]);
 
                 cout << "Cost of this path was " << path.getTotalCost();
+                int cost = path.getTotalCost();
 
                 int path_len = 2* path.getPathLen();
                 vector<int> path_send = path.getPathSend();
 
                 MPI_Send(&path_len, 1, MPI_INT, 1, 2, MPI_COMM_WORLD);
                 MPI_Send(&path_send[0], path_len, MPI_INT, 1, 2, MPI_COMM_WORLD);
+                MPI_Send(&cost, 1, MPI_INT, 1, 3, MPI_COMM_WORLD);
+
                 break;
             }
 
@@ -192,12 +201,14 @@ int main() {
                 Path path = problem.find_in_explored_nodes(other_process_coordinates[0], other_process_coordinates[1]);
                 
                 cout << "Cost of this path was " << path.getTotalCost();
+                int cost = path.getTotalCost();
 
                 int path_len = 2* path.getPathLen();
                 vector<int> path_send = path.getPathSend();
 
                 MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
                 MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                MPI_Send(&cost, 1, MPI_INT, 0, 3, MPI_COMM_WORLD);
                 break;
             }
 
@@ -222,10 +233,16 @@ int main() {
 
                 // cost of this part of the solution
                 Path path = Path(current_node);
-                int cost = path.getTotalCost(); //- map[current_node.getCoordinates().x][current_node.getCoordinates().y];
+                int cost = path.getTotalCost() - map[current_node.getCoordinates().x][current_node.getCoordinates().y];
 
-                cout << "Cost on the goal " << map[goal.x][goal.y] << endl;
-                cout << "Process " << rank << " cost was " << cost << endl;
+//                cout << "Cost on the goal " << map[goal.x][goal.y] << endl;
+//                cout << "Process " << rank << " cost was " << cost << endl;
+
+                int other_process_cost;
+                MPI_Recv(&other_process_cost, 1, MPI_INT, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+                int final_cost = cost + other_process_cost + map[start.x][start.y] + map[goal.x][goal.y];
+                cout << "Total final cost was: " << final_cost << endl;
 
                 break;
             }
