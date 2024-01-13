@@ -61,7 +61,8 @@ int Astar_search::cost(Coordinates new_coordinates) {
 }
 
 int Astar_search::estimate(Coordinates coordinates) {
-    return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
+    //return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
+    return abs(goal.x - coordinates.x) + abs(coordinates.y - this->start.y);
 }
 
 Path Astar_search::search() {
