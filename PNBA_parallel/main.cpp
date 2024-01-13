@@ -48,9 +48,8 @@ void read_path(const std::string& filename, Path& path) {
 
 
 int main() {
-    // create imput map
-    int width = 5000;
-    int height = 5000;
+    
+
     
     int world_size;
     int rank;
@@ -63,8 +62,15 @@ int main() {
     // get  common rank
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    std::vector<unsigned short> input_size = {500, 1000, 1500, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000}
+
+    // create imput map
+    
+    int width = 2500;
+    int height = 2500;
+
     Coordinates start = Coordinates{ 0, 5 }; // 0, 5
-    Coordinates goal = Coordinates{ 4984, 4994 }; //4984, 4994 
+    Coordinates goal = Coordinates{ 2484, 2494 }; //4984, 4994 
 
     vector<vector<unsigned short>> map;
 
@@ -101,14 +107,14 @@ int main() {
             if (problem.check_is_other_process_visited(current_node.getCoordinates().x, current_node.getCoordinates().y)) {
                 // send message that you have found a match and wait for data from the other process
                 MPI_Send(coordinates, 2, MPI_INT, 1, 1, MPI_COMM_WORLD);
-                cout << "Found match with other process" << endl;
+                //cout << "Found match with other process" << endl;
                 last_coordinates = current_node.getCoordinates();
 
                 // received data about other process search
                 //get len of the data vector first
                 int other_process_path_len;
                 MPI_Recv(&other_process_path_len, 1, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                cout << "Path length is " << other_process_path_len/2 << endl;
+                //cout << "Path length is " << other_process_path_len/2 << endl;
 
                 // get the whole path
                 std::vector<int> other_process_path(other_process_path_len);
@@ -117,6 +123,8 @@ int main() {
                 // cost of this part of the solution
                 Path path = Path(current_node);
                 int cost = path.getTotalCost() - map[current_node.getCoordinates().x][current_node.getCoordinates().y];
+                int path_len = path.getPathLen();
+                int total_path_len = path_len + other_process_path_len -1;
 
                 int other_process_cost;
                 MPI_Recv(&other_process_cost, 1, MPI_INT, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -126,6 +134,7 @@ int main() {
 //                cout << "Cost on the goal " << map[goal.x][goal.y] << endl;
 //                cout << "Process " << rank << " cost was " << cost << endl;
                 cout << "Total final cost was: " << final_cost << endl;
+                cout << "Path len is " << total_path_len << endl;
 
                 break;
             }
@@ -208,13 +217,13 @@ int main() {
             MPI_Recv(other_process_coordinates, 2, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
             if(status.MPI_TAG == 1){
-                cout << "Got message about match, my process" << rank << endl;
+                //cout << "Got message about match, my process" << rank << endl;
 
                 // now try to match node to the other process coordinates, so you can reconstruct the path
                 // and send the message back to the other process
                 Path path = problem.find_in_explored_nodes(other_process_coordinates[0], other_process_coordinates[1]);
                 
-                cout << "Cost of this path was " << path.getTotalCost();
+                //cout << "Cost of this path was " << path.getTotalCost();
                 int cost = path.getTotalCost();
 
                 int path_len = 2* path.getPathLen();
