@@ -152,6 +152,7 @@ int main() {
 
             if(status.MPI_TAG == 1){
                 cout << "Got message about match, my process" << rank << endl;
+                // now try to match node to the other process coordinates, so you can reconstruct the path
                 break;
             }
 
