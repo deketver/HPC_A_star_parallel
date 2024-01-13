@@ -96,7 +96,6 @@ void Astar_search::mark_other_process_visited(int x, int y){
 void Astar_search::expand_problem(Node& current_node){
     vector<Action> actions = this->getActions(current_node);
 
-
     for (Action action : actions) {
         Coordinates new_coordinates = this->getResult(current_node.getCoordinates(), action);
         int new_cost = current_node.getCost() + this->cost(new_coordinates);
@@ -118,6 +117,16 @@ void Astar_search::try_match_parent_current_node(Node& current_node,int other_pr
             return;
         }
         current_node = *parent;
+    }
+    cout << "No match found" << endl;
+}
+
+void Astar_search::find_in_explored_nodes(int other_process_x, int other_process_y){
+    for (shared_ptr<Node> node : this->explored_nodes){
+        if (node->getCoordinates().x == other_process_x && node->getCoordinates().y == other_process_y){
+            cout << "Found node to create path!" << endl;
+            return;
+        }
     }
     cout << "No match found" << endl;
 }

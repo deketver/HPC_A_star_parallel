@@ -14,8 +14,10 @@ class Astar_search {
     vector<vector<unsigned short>> map;
     vector<vector<bool>> visited;
     vector<vector<bool>> other_process_visited;
+
 public:
     priority_queue<Node> queue;
+    vector<shared_ptr<Node>> explored_nodes;
     Astar_search(int width, int height, Coordinates start, Coordinates goal, vector<vector<unsigned short>> map);
     Path search();
     bool isGoal(Node& node);
@@ -42,5 +44,6 @@ public:
     void mark_other_process_visited(int x, int y); // marks the node as visited
     void expand_problem(Node& current_node); // expands the problem by adding new nodes to the queue
     void try_match_parent_current_node(Node& current_node,int other_process_x, int other_process_y);
+    void find_in_explored_nodes(int other_process_x, int other_process_y)
 
 };

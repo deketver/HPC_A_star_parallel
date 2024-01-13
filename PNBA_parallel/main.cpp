@@ -140,6 +140,7 @@ int main() {
 
         while(!problem.queue.empty()) {
             Node current_node = problem.take_first_from_queue();
+            problem.explored_nodes.push_back(make_shared<Node>(current_node));
             if (problem.check_is_visited(current_node.getCoordinates().x, current_node.getCoordinates().y)) {
                 continue;
             }
@@ -154,7 +155,7 @@ int main() {
                 cout << "Got message about match, my process" << rank << endl;
                 // now try to match node to the other process coordinates, so you can reconstruct the path
                 // and send the message back to the other process
-                problem.try_match_parent_current_node(current_node, other_process_coordinates[0], other_process_coordinates[1]);
+                problem.find_in_explored_nodes(other_process_coordinates[0], other_process_coordinates[1]);
                 break;
             }
 
