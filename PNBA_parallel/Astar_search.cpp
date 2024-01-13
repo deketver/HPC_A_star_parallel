@@ -121,14 +121,17 @@ void Astar_search::try_match_parent_current_node(Node& current_node,int other_pr
     cout << "No match found" << endl;
 }
 
-void Astar_search::find_in_explored_nodes(int other_process_x, int other_process_y){
+Path Astar_search::find_in_explored_nodes(int other_process_x, int other_process_y){
     for (shared_ptr<Node> node : this->explored_nodes){
         if (node->getCoordinates().x == other_process_x && node->getCoordinates().y == other_process_y){
+            Path path = Path(*node);
             cout << "Found node to create path!" << endl;
-            return;
+            return path;
         }
     }
+    Path path = Path();
     cout << "No match found" << endl;
+    return path;
 }
 
 Path Astar_search::search() {

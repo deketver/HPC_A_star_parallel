@@ -16,18 +16,34 @@ Path::Path(Node& last_node) {
             this->coordinates.push_back(new_node->getCoordinates());
             new_node = new_node->getParent();
         }
+        std::reverse(this->coordinates.begin(), this->coordinates.end());
+        this->path_len = this->nodes.size();
     }
-    std::reverse(this->coordinates.begin(), this->coordinates.end());
+
 }
 
 Path::Path() {
     this->total_cost = 0;
+    this->path_len = 0;
     this->nodes = {};
     this->coordinates = {};
 }
 
 int Path::getTotalCost() {
     return this->total_cost;
+}
+
+int Path::getPathLen() {
+    return this->path_len;
+}
+
+int Path::getPathSend() {
+    int path_send[2 * this->path_len] = {0};
+    for (int i = 0; i < this->path_len; i++) {
+        path_send[2*i] = this->coordinates[i].x;
+        path_send[2*i+1] = this->coordinates[i].y;
+    }
+    return *path_send;
 }
 
 vector<shared_ptr<Node>> Path::getPath() {

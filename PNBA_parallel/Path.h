@@ -9,12 +9,15 @@ using namespace std;
 
 class Path {
     int total_cost;
+    int path_len = 0;
     vector<shared_ptr<Node>> nodes;
     vector<Coordinates> coordinates = {};
 public:
     explicit Path(Node& last_node); //Node& last_node
     Path();
     int getTotalCost();
+    int getPathLen();
+    int getPathSend();
     vector<shared_ptr<Node>> getPath();
     void print();
     void printCoordinates();
