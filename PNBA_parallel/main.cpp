@@ -86,6 +86,7 @@ int main() {
             }
             // mark state visited
             problem.mark_visited(current_node.getCoordinates().x, current_node.getCoordinates().y);
+            problem.explored_nodes.push_back(make_shared<Node>(current_node));
 
             // now we should send a message of new visited state to the other process
             // we should send the coordinates of the visited state
@@ -94,6 +95,7 @@ int main() {
 
             int coordinates[2] = {current_node.getCoordinates().x, current_node.getCoordinates().y};
             if (problem.check_is_other_process_visited(current_node.getCoordinates().x, current_node.getCoordinates().y)) {
+                // send message that you have found a match and wait for data from the other process
                 MPI_Send(coordinates, 2, MPI_INT, 1, 1, MPI_COMM_WORLD);
                 cout << "Found match with other process" << endl;
                 last_coordinates = current_node.getCoordinates();
@@ -128,6 +130,18 @@ int main() {
 
             if(status.MPI_TAG == 1){
                 cout << "Got message about match, my process" << rank << endl;
+
+                // now try to match node to the other process coordinates, so you can reconstruct the path
+                // and send the message back to the other process
+                Path path = problem.find_in_explored_nodes(other_process_coordinates[0], other_process_coordinates[1]);
+
+                cout << "Cost of this path was " << path.getTotalCost();
+
+                int path_len = 2* path.getPathLen();
+                vector<int> path_send = path.getPathSend();
+
+                MPI_Send(&path_len, 1, MPI_INT, 1, 2, MPI_COMM_WORLD);
+                MPI_Send(&path_send[0], path_len, MPI_INT, 1, 2, MPI_COMM_WORLD);
                 break;
             }
 
@@ -158,12 +172,13 @@ int main() {
 
         while(!problem.queue.empty()) {
             Node current_node = problem.take_first_from_queue();
-            problem.explored_nodes.push_back(make_shared<Node>(current_node));
+
             if (problem.check_is_visited(current_node.getCoordinates().x, current_node.getCoordinates().y)) {
                 continue;
             }
             // mark state visited
             problem.mark_visited(current_node.getCoordinates().x, current_node.getCoordinates().y);
+            problem.explored_nodes.push_back(make_shared<Node>(current_node));
 
             int other_process_coordinates[2];
             MPI_Status status;
@@ -194,6 +209,24 @@ int main() {
                 MPI_Send(coordinates, 2, MPI_INT, 0, 1, MPI_COMM_WORLD);
                 cout << "Sending message about match, my process" << rank << endl;
                 last_coordinates = current_node.getCoordinates();
+
+                // received data about other process search
+                //get len of the data vector first
+                int other_process_path_len;
+                MPI_Recv(&other_process_path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                cout << "Path length is " << other_process_path_len << endl;
+
+                // get the whole path
+                std::vector<int> other_process_path(other_process_path_len);
+                MPI_Recv(&other_process_path[0], other_process_path_len, MPI_INT, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+                // cost of this part of the solution
+                Path path = Path(current_node);
+                int cost = path.getTotalCost(); //- map[current_node.getCoordinates().x][current_node.getCoordinates().y];
+
+                cout << "Cost on the goal " << map[goal.x][goal.y] << endl;
+                cout << "Process " << rank << " cost was " << cost << endl;
+
                 break;
             }
             else{
