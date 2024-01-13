@@ -67,22 +67,22 @@ void read_path(const std::string& filename, Path& path) {
 
 int main() {
     // create imput map
-    int width = 1500;
-    int height = 1500;
-    vector<vector<unsigned short>> map;
-    for (int i = 0; i < height; i++) {
-        vector<unsigned short> row;
-        row.reserve(width);
-        for (int j = 0; j < width; j++) {
-            row.push_back(static_cast<unsigned short>(rand() % 10));
-        }
-        map.push_back(row);
-    }
+    int width = 1000;
+    int height = 1000;
+//    vector<vector<unsigned short>> map;
+//    for (int i = 0; i < height; i++) {
+//        vector<unsigned short> row;
+//        row.reserve(width);
+//        for (int j = 0; j < width; j++) {
+//            row.push_back(static_cast<unsigned short>(rand() % 10));
+//        }
+//        map.push_back(row);
+//    }
     std::ostringstream filename;
     filename << "map_" << width << ".txt";
-    save_matrix_file(filename.str(), map);
-    vector<vector<unsigned short>> second;
-    read_matrix(filename.str(), second);
+//    save_matrix_file(filename.str(), map);
+    vector<vector<unsigned short>> map;
+    read_matrix(filename.str(), map);
 
 
 //    // print map
@@ -93,7 +93,7 @@ int main() {
 //        cout << endl;
 //    }
     Coordinates start = Coordinates{ 0, 5 };
-    Coordinates goal = Coordinates{ 1484, 1494 };
+    Coordinates goal = Coordinates{ 984, 994 };
 
     cout << "start is " << map[start.x][start.y] << endl;
     cout << "finish is " << map[goal.x][goal.y] << endl;
@@ -108,10 +108,10 @@ int main() {
     // save path to file
     std::ostringstream path_filename;
     path_filename << "solution_" << width << ".txt";
-    save_path(path_filename.str(), path);
-    Path path2 = Path();
-    read_path(path_filename.str(), path2);
-    cout << "Paths are same: " << (path == path2) << endl;
+    //save_path(path_filename.str(), path);
+    Path solution = Path();
+    read_path(path_filename.str(), solution);
+    cout << "Paths are same: " << (path == solution) << endl;
 
 
     return 0;

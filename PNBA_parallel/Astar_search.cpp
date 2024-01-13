@@ -12,7 +12,6 @@ bool Astar_search::isGoal(Node& node) {
     return node.getCoordinates().x == this->goal.x && node.getCoordinates().y == this->goal.y;
 }
 
-
 vector<Action> Astar_search::getActions(Node& node) {
     vector<Action> actions;
     for (int i = 0; i < 4; i++) {
