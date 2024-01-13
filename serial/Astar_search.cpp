@@ -1,11 +1,13 @@
 #include "Astar_search.h"
 
+#include <utility>
+
 Astar_search::Astar_search(int width, int height, Coordinates start, Coordinates goal, vector<vector<unsigned short>> map) {
     this->width = width;
     this->height = height;
     this->start = start;
     this->goal = goal;
-    this->map = map;
+    this->map = std::move(map);
 }
 
 bool Astar_search::isGoal(Node& node) {
@@ -61,8 +63,8 @@ int Astar_search::cost(Coordinates new_coordinates) {
 }
 
 int Astar_search::estimate(Coordinates coordinates) {
-    //return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
-    return abs(goal.x - coordinates.x) + abs(goal.y - coordinates.y);
+    return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
+    //return abs(goal.x - coordinates.x) + abs(goal.y - coordinates.y);
 }
 
 Path Astar_search::search() {

@@ -67,9 +67,9 @@ void read_path(const std::string& filename, Path& path) {
 
 int main() {
     // create imput map
-    int width = 5000;
-    int height = 5000;
-//   vector<vector<unsigned short>> map;
+    int width = 2000;
+    int height = 2000;
+   vector<vector<unsigned short>> map;
 //   for (int i = 0; i < height; i++) {
 //       vector<unsigned short> row;
 //       row.reserve(width);
@@ -79,14 +79,23 @@ int main() {
 //       map.push_back(row);
 //   }
     std::ostringstream filename;
-    filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/map_" << width << ".txt";
-    //filename << "map_" << width << ".txt";
+    //filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/map_" << width << ".txt";
+    filename << "map_" << width << ".txt";
     //save_matrix_file(filename.str(), map);
-    vector<vector<unsigned short>> map;
+    //vector<vector<unsigned short>> map;
     read_matrix(filename.str(), map);
 
-    Coordinates start = Coordinates{ 0, 5 };
-    Coordinates goal = Coordinates{ 4984, 4994 };
+//    for(int i = 0; i < height; i++){
+//        for(int j = 0; j < width; j++){
+//            cout << map[i][j] << " ";
+//        }
+//        cout << endl;
+//    }
+
+    Coordinates start = Coordinates{ 0, 0 };
+    Coordinates goal = Coordinates{ 1999, 1999 };
+
+    //Coordinates goal = Coordinates{ 484, 494 };
 
     cout << "start is " << map[start.x][start.y] << endl;
     cout << "finish is " << map[goal.x][goal.y] << endl;
@@ -97,6 +106,7 @@ int main() {
     cout << "Time difference = " << chrono::duration_cast<chrono::seconds>(end - begin).count() << "[s]" << endl;
     path.print_path_len();
     path.print_total_cost();
+    //path.printCoordinates();
 
     // save path to file
     std::ostringstream path_filename;
@@ -105,7 +115,6 @@ int main() {
     // Path solution = Path();
     // read_path(path_filename.str(), solution);
     // cout << "Paths are same: " << (path == solution) << endl;
-
 
     return 0;
 }
