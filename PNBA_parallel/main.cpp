@@ -49,8 +49,8 @@ void read_path(const std::string& filename, Path& path) {
 
 int main() {
     // create imput map
-    int width = 100;
-    int height = 100;
+    int width = 500;
+    int height = 500;
     
     int world_size;
     int rank;
@@ -64,7 +64,7 @@ int main() {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     Coordinates start = Coordinates{ 0, 5 };
-    Coordinates goal = Coordinates{ 84, 94 };
+    Coordinates goal = Coordinates{ 484, 494 };
 
     vector<vector<unsigned short>> map;
 
@@ -108,13 +108,13 @@ int main() {
                 std::vector<int> other_process_path(other_process_path_len);
                 MPI_Recv(&other_process_path[0], other_process_path_len, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-                cout << "Received path is " << endl;
-                for (int i = 0; i < other_process_path_len; i++){
-                    if (i % 2 == 0){
-                        cout << endl;
-                    }
-                    cout << other_process_path[i] << " ";
-                }
+                // cost of this part of the solution
+                Path path = Path(current_node);
+                int cost = path.getTotalCost(); //- map[current_node.getCoordinates().x][current_node.getCoordinates().y];
+
+                cout << "Cost on the goal " << map[goal.x][goal.y] << endl;
+                cout << "Process " << rank << " cost was " << cost << endl;
+
                 break;
             }
             else{
@@ -175,15 +175,11 @@ int main() {
                 // now try to match node to the other process coordinates, so you can reconstruct the path
                 // and send the message back to the other process
                 Path path = problem.find_in_explored_nodes(other_process_coordinates[0], other_process_coordinates[1]);
+                
+                cout << "Cost of this path was " << path.getTotalCost();
+
                 int path_len = 2* path.getPathLen();
                 vector<int> path_send = path.getPathSend();
-                cout << "Vector I am sending: " << endl;
-                for (int i = 0; i < path_len; i++){
-                    if (i % 2 == 0){
-                        cout << endl;
-                    }
-                    cout << path_send[i] << " ";
-                }
 
                 MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
                 MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
