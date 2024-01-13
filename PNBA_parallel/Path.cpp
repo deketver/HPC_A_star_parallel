@@ -37,14 +37,14 @@ int Path::getPathLen() {
     return this->path_len;
 }
 
-int Path::getPathSend() {
+vector<int> Path::getPathSend() {
     int len = this->path_len;
-    int* path_send = new int[2*len];
+    std::vector<int> path_send(2 * len);
     for (int i = 0; i < this->path_len; i++) {
         path_send[2*i] = this->coordinates[i].x;
         path_send[2*i+1] = this->coordinates[i].y;
     }
-    return *path_send;
+    return path_send;
 }
 
 vector<shared_ptr<Node>> Path::getPath() {

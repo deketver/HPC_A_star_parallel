@@ -17,7 +17,7 @@ public:
     Path();
     int getTotalCost();
     int getPathLen();
-    int getPathSend();
+    vector<int> getPathSend();
     vector<shared_ptr<Node>> getPath();
     void print();
     void printCoordinates();

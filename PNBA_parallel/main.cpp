@@ -163,8 +163,8 @@ int main() {
                 Path path = problem.find_in_explored_nodes(other_process_coordinates[0], other_process_coordinates[1]);
                 int path_len = 2* path.getPathLen();
                 auto path_send = path.getPathSend();
-                MPI_Send(path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
-                MPI_Send(path_send, path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                MPI_Send(&path_send, path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
                 break;
             }
 
