@@ -6,6 +6,9 @@ Astar_search::Astar_search(int width, int height, Coordinates start, Coordinates
     this->start = start;
     this->goal = goal;
     this->map = map;
+    this->visited = vector<vector<bool>>(this->height, vector<bool>(this->width, false));
+    this->other_process_visited = vector<vector<bool>>(this->height, vector<bool>(this->width, false));
+    this->queue = priority_queue<Node>();
 }
 
 bool Astar_search::isGoal(Node& node) {
@@ -63,30 +66,72 @@ int Astar_search::estimate(Coordinates coordinates) {
     return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
 }
 
+void Astar_search::initialize(){
+    Node const start_node = Node(this->start, 0, 0, Action{ 0, 0 }, nullptr);
+    this->queue.push(start_node);
+}
+
+Node Astar_search::take_first_from_queue(){
+    Node current_node = this->queue.top();
+    this->queue.pop();
+    return current_node;
+}
+
+bool Astar_search::check_is_visited(int x, int y){
+    return this->visited[x][y];
+}
+
+bool Astar_search::check_is_other_process_visited(int x, int y){
+    return this->other_process_visited[x][y];
+}
+
+void Astar_search::mark_visited(int x, int y){
+    this->visited[x][y] = true;
+}
+
+void Astar_search::mark_other_process_visited(int x, int y){
+    this->other_process_visited[x][y] = true;
+}
+
+void Astar_search::expand_problem(Node& current_node){
+    vector<Action> actions = this->getActions(current_node);
+
+    for (Action action : actions) {
+        Coordinates new_coordinates = this->getResult(current_node.getCoordinates(), action);
+        int new_cost = current_node.getCost() + this->cost(new_coordinates);
+        int new_f_cost = new_cost + this->estimate(new_coordinates);
+        Node new_node = Node(new_coordinates, new_cost, new_f_cost, action, make_shared<Node>(current_node)); //return Path(std::make_shared<Node>(current_node));
+        this->queue.push(new_node);
+    }
+}
+
+
 Path Astar_search::search() {
     Node const start_node = Node(this->start, 0, 0, Action{ 0, 0 }, nullptr);
-    priority_queue<Node> queue;
-    queue.push(start_node);
+    this->queue.push(start_node);
 
     // keep track of visited nodes
-    vector<vector<bool>> visited(this->height, vector<bool>(this->width, false));
+    //vector<vector<bool>> visited(this->height, vector<bool>(this->width, false));
+
 
     while (!queue.empty()) {
-        Node current_node = queue.top();
-        queue.pop();
+        Node current_node = this->queue.top();
+        this->queue.pop();
 
         // check if node has been visited, or better
-        if (visited[current_node.getCoordinates().x][current_node.getCoordinates().y]) {
+        if (this->visited[current_node.getCoordinates().x][current_node.getCoordinates().y]) {
             continue;
         }
 
-        visited[current_node.getCoordinates().x][current_node.getCoordinates().y] = true;
+        if (this->other_process_visited[current_node.getCoordinates().x][current_node.getCoordinates().y]) {
+            cout << "Found match with other process" << endl;
+        }
+
+        this->visited[current_node.getCoordinates().x][current_node.getCoordinates().y] = true;
 
         if (this->isGoal(current_node)) {
             cout << "Found solution" << endl;
             return Path(current_node);
-
-
         }
 
         int f_cost = current_node.getF_cost();
@@ -98,7 +143,7 @@ Path Astar_search::search() {
             int new_cost = current_node.getCost() + this->cost(new_coordinates);
             int new_f_cost = new_cost + this->estimate(new_coordinates);
             Node new_node = Node(new_coordinates, new_cost, new_f_cost, action, make_shared<Node>(current_node)); //return Path(std::make_shared<Node>(current_node));
-            queue.push(new_node);
+            this->queue.push(new_node);
         }
     }
     // no solution found
