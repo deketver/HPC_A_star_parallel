@@ -67,7 +67,8 @@ void read_path(const std::string& filename, Path& path) {
 
 int main() {
     // create imput map
-    std::vector<int> input_size = {500, 1000, 1500, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000};
+    //std::vector<int> input_size = {500, 1000, 1500, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000};
+    std::vector<int> input_size = {2000};
     for (auto& size: input_size) {
         cout << endl;
         cout << "Size is " << size << endl;
@@ -75,23 +76,23 @@ int main() {
         int width = size;
         int height = size;
         vector<vector<unsigned short>> map;
-        for (int i = 0; i < height; i++) {
-            vector<unsigned short> row;
-            row.reserve(width);
-            for (int j = 0; j < width; j++) {
-                row.push_back(static_cast<unsigned short>(rand() % 10));
-            }
-            map.push_back(row);
-        }
+        // for (int i = 0; i < height; i++) {
+        //     vector<unsigned short> row;
+        //     row.reserve(width);
+        //     for (int j = 0; j < width; j++) {
+        //         row.push_back(static_cast<unsigned short>(rand() % 10));
+        //     }
+        //     map.push_back(row);
+        // }
         std::ostringstream filename;
         filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/map_" << width << ".txt";
         //filename << "map_" << width << ".txt";
-        save_matrix_file(filename.str(), map);
+        //save_matrix_file(filename.str(), map);
         // vector<vector<unsigned short>> map;
-        // read_matrix(filename.str(), map);
+        read_matrix(filename.str(), map);
 
-        Coordinates start = Coordinates{0, 5};
-        Coordinates goal = Coordinates{size-16, size-6};
+        Coordinates start = Coordinates{0, 0};
+        Coordinates goal = Coordinates{size-1, size-1};
 
         cout << "start is " << map[start.x][start.y] << endl;
         cout << "finish is " << map[goal.x][goal.y] << endl;
