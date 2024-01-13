@@ -49,8 +49,8 @@ void read_path(const std::string& filename, Path& path) {
 
 int main() {
     // create imput map
-    int width = 10;
-    int height = 10;
+    int width = 100;
+    int height = 100;
     
     int world_size;
     int rank;
@@ -64,12 +64,12 @@ int main() {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     Coordinates start = Coordinates{ 0, 5 };
-    Coordinates goal = Coordinates{ 4, 4 };
+    Coordinates goal = Coordinates{ 84, 94 };
 
     vector<vector<unsigned short>> map;
 
     std::ostringstream filename;
-    filename << "map_" << width << ".txt";
+    filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/map_" << width << ".txt";
     read_matrix(filename.str(), map);
 
     if( rank == 0){
