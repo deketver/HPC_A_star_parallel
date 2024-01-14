@@ -135,6 +135,15 @@ int main() {
 
                     MPI_Send(coordinates_and_costs, 5, MPI_INT, 1, 1, MPI_COMM_WORLD);
 
+                    int other_process_coordinates_and_cost[4];
+                    MPI_Status status;
+                    MPI_Recv(other_process_coordinates_and_cost, 4, MPI_INT, 1, 0, MPI_COMM_WORLD, &status); //MPI_ANY_TAG
+                    problem.mark_other_process_visited(other_process_coordinates_and_cost[0], other_process_coordinates_and_cost[1]);
+                    F_2 = other_process_coordinates_and_cost[2];
+                    problem.other_process_costs[other_process_coordinates_and_cost[0]][other_process_coordinates_and_cost[1]] = other_process_coordinates_and_cost[3];
+                    //g_2 = other_process_coordinates_and_cost[3];
+                    problem.expand_problem(current_node);
+
                     //last_coordinates = current_node.getCoordinates();
 
                     /* previous logic
@@ -190,8 +199,8 @@ int main() {
 
             // now ask for the path from the best solution
             // and send the coordinates you want first
-            int coordinates[2] = {best_solution_coordinates.x, best_solution_coordinates.y};
-            MPI_Send(coordinates, 2, MPI_INT, 1, 2, MPI_COMM_WORLD); // tag 2 for solution sending
+            int coordinates_solution[5] = {best_solution_coordinates.x, best_solution_coordinates.y, 0, 0, best_solution};
+            MPI_Send(coordinates_solution, 5, MPI_INT, 1, 2, MPI_COMM_WORLD); // tag 2 for solution sending
 
             // now wait to receive the path
             int other_process_path_len;
@@ -226,8 +235,12 @@ int main() {
             problem.initialize();
             unsigned int F_1 = 0;
             //unsigned int g_1 = 0;
+            Coordinates best_solution_coordinates = Coordinates{0, 0};
 
             unsigned int best_solution = std::numeric_limits<unsigned int>::max();
+
+            // can happen that its queue is empty, but the other process is still working?
+            // so we need to wait for the other process to finish
 
             while (!problem.queue.empty()) {
                 Node current_node = problem.take_first_from_queue();
@@ -263,7 +276,14 @@ int main() {
 //                    MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
 //                    MPI_Send(&cost, 1, MPI_INT, 0, 3, MPI_COMM_WORLD);
 //                    break;
-                } else {
+                } else if (status.MPI_TAG == 2){
+                    // first node ended and is sending us the best solution coordinates
+                    best_solution_coordinates = Coordinates{other_process_coordinates_costs[0], other_process_coordinates_costs[1]};
+                    // finish you cycle
+                    break;
+
+                }
+                else {
 
                     problem.mark_other_process_visited(other_process_coordinates_costs[0], other_process_coordinates_costs[1]);
                     F_1 = other_process_coordinates_costs[2];
@@ -288,12 +308,10 @@ int main() {
             // now we got our branch empty, so we need to wait for the other process
             // to send us final matching coordinates to recreate the path
 
-            int best_solution_coordinates[0];
-            MPI_Recv(&best_solution_coordinates, 2, MPI_INT, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             // now we have the coordinates, so we can recreate the path
-            Path path = problem.find_in_explored_nodes(best_solution_coordinates[0],
-                                                       best_solution_coordinates[1]);
+            Path path = problem.find_in_explored_nodes(best_solution_coordinates.x,
+                                                       best_solution_coordinates.y);
             int cost = path.getTotalCost();
 
             int path_len = 2 * path.getPathLen();
