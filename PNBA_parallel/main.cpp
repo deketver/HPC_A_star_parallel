@@ -233,11 +233,11 @@ int main() {
         } else {
             Astar_search problem = Astar_search(width, height, goal, start, map);
             problem.initialize();
-            unsigned int F_1 = 0;
+            int F_1 = 0;
             //unsigned int g_1 = 0;
             Coordinates best_solution_coordinates = Coordinates{0, 0};
 
-            unsigned int best_solution = std::numeric_limits<unsigned int>::max();
+            int best_solution = std::numeric_limits<int>::max();
 
             // can happen that its queue is empty, but the other process is still working?
             // so we need to wait for the other process to finish
@@ -250,6 +250,14 @@ int main() {
                 }
                 if (problem.check_is_other_process_visited(current_node.getCoordinates().x,
                                                            current_node.getCoordinates().y)) {
+                    continue;
+                }
+
+                if (current_node.getF_cost() >= best_solution) {
+                    continue;
+                }
+
+                if(current_node.getCost() + F_1 - problem.estimate_other_process(current_node.getCoordinates()) >= best_solution){
                     continue;
                 }
 
