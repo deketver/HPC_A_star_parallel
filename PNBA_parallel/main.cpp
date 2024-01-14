@@ -47,17 +47,14 @@ void read_path(const std::string& filename, Path& path) {
     file.close();
 }
 
-
 int main() {
-    
     int world_size;
     int rank;
 
     MPI_Init(NULL, NULL);
-
     // get number of processes
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    
+
     // get  common rank
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -70,32 +67,38 @@ int main() {
         int width = size;
         int height = size;
 
+        // create start and goal coordinates
         Coordinates start = Coordinates{0, 5}; // 0, 5
         Coordinates goal = Coordinates{size - 16, size - 6};
 
+        // read the map from the file
         vector<vector<unsigned short>> map;
-
         std::ostringstream filename;
         filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/map_" << width << ".txt";
         read_matrix(filename.str(), map);
 
-        if (rank == 0) {
+        // now different logic based on the rank
+        if (rank == 0){
+            // process 1
 
             int best_solution = std::numeric_limits<int>::max();
             int F_2 = 0;
             Coordinates best_solution_coordinates = Coordinates{0, 0};
-            //unsigned int g_2 = 0;
 
+            // print how does start and finish coordinates look like
             cout << "start is " << map[start.x][start.y] << endl;
             cout << "finish is " << map[goal.x][goal.y] << endl;
+
+            // start time
             double t1 = MPI_Wtime();
+
             Astar_search problem = Astar_search(width, height, start, goal, map);
             problem.initialize();
-            Coordinates last_coordinates = Coordinates{0, 0};
 
-            while (!problem.queue.empty()) {
+            while(!problem.queue.empty()){
                 Node current_node = problem.take_first_from_queue();
 
+                // node was already visited
                 if (problem.check_is_visited(current_node.getCoordinates().x, current_node.getCoordinates().y)) {
                     continue;
                 }
@@ -109,116 +112,51 @@ int main() {
                     continue;
                 }
 
-                // mark state visited
+                // mark as visited state, add to explored nodes
                 problem.mark_visited(current_node.getCoordinates().x, current_node.getCoordinates().y);
                 problem.explored_nodes.push_back(make_shared<Node>(current_node));
 
-                // now we should send a message of new visited state to the other process
-                // we should send the coordinates of the visited state
-                // we will use tags in order to diferentiate between message sending just
-                // coordinates for updates and between found match in search space
-
-
+                // if the other node has already seen this node
                 if (problem.check_is_other_process_visited(current_node.getCoordinates().x,
                                                            current_node.getCoordinates().y)) {
-                    // send message that you have found a match and wait for data from the other process
 
-                    // get g2 for given coordinates
+                    // have a look what was the cost on this node from the other ones perspective
                     int g_2 = problem.other_process_costs[current_node.getCoordinates().x][current_node.getCoordinates().y];
                     int final_cost = current_node.getCost() + g_2 + map[goal.x][goal.y];
+
+                    // if this is better then previous solution, update it
                     if (final_cost < best_solution) {
                         best_solution = final_cost;
                         best_solution_coordinates = current_node.getCoordinates();
                     }
-                    // x, y, fcost, cost, best solution so far
-                    int coordinates_and_costs[5] = {current_node.getCoordinates().x, current_node.getCoordinates().y,
-                                                    current_node.getF_cost(), current_node.getCost(), best_solution};
-
-                    MPI_Send(coordinates_and_costs, 5, MPI_INT, 1, 1, MPI_COMM_WORLD);
-
-                    int other_process_coordinates_and_cost[4];
-                    MPI_Status status;
-                    MPI_Recv(other_process_coordinates_and_cost, 4, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD,
-                             &status); //MPI_ANY_TAG
-                    problem.mark_other_process_visited(other_process_coordinates_and_cost[0],
-                                                       other_process_coordinates_and_cost[1]);
-                    F_2 = other_process_coordinates_and_cost[2];
-                    problem.other_process_costs[other_process_coordinates_and_cost[0]][other_process_coordinates_and_cost[1]] = other_process_coordinates_and_cost[3];
-                    //g_2 = other_process_coordinates_and_cost[3];
-                    if (status.MPI_TAG == 2) {
-                        // other process has no more nodes to explore
-                        // so we can finish our search
-                        break;
-                    }
-
-                    problem.expand_problem(current_node);
-
-                    //last_coordinates = current_node.getCoordinates();
-
-                    /* previous logic
-
-                    // received data about other process search
-                    //get len of the data vector first
-                    int other_process_path_len;
-                    MPI_Recv(&other_process_path_len, 1, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                    //cout << "Path length is " << other_process_path_len/2 << endl;
-
-                    // get the whole path
-                    std::vector<int> other_process_path(other_process_path_len);
-                    MPI_Recv(&other_process_path[0], other_process_path_len, MPI_INT, 1, 2, MPI_COMM_WORLD,
-                             MPI_STATUS_IGNORE);
-
-                    // cost of this part of the solution
-                    Path path = Path(current_node);
-                    int cost =
-                            path.getTotalCost() - map[current_node.getCoordinates().x][current_node.getCoordinates().y];
-                    int path_len = path.getPathLen();
-                    int total_path_len = path_len + other_process_path_len/2 - 1;
-
-                    int other_process_cost;
-                    MPI_Recv(&other_process_cost, 1, MPI_INT, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-                    int final_cost = cost + other_process_cost + map[goal.x][goal.y];
-
-                    cout << "Total final cost was: " << final_cost << endl;
-                    cout << "Path len is " << total_path_len << endl;
-
-                    break;
-                     */
-                } else {
-                    int coordinates_and_costs[5] = {current_node.getCoordinates().x, current_node.getCoordinates().y,
-                                                    current_node.getF_cost(), current_node.getCost(), best_solution};
-                    MPI_Send(coordinates_and_costs, 5, MPI_INT, 1, 0, MPI_COMM_WORLD);
-
-                    int other_process_coordinates_and_cost[4];
-                    MPI_Status status;
-                    MPI_Recv(other_process_coordinates_and_cost, 4, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD,
-                             &status); //MPI_ANY_TAG
-                    problem.mark_other_process_visited(other_process_coordinates_and_cost[0],
-                                                       other_process_coordinates_and_cost[1]);
-                    F_2 = other_process_coordinates_and_cost[2];
-                    problem.other_process_costs[other_process_coordinates_and_cost[0]][other_process_coordinates_and_cost[1]] = other_process_coordinates_and_cost[3];
-                    //g_2 = other_process_coordinates_and_cost[3];
-                    if (status.MPI_TAG == 2) {
-                        // other process has no more nodes to explore
-                        // so we can finish our search
-                        break;
-                    }
-
-                    problem.expand_problem(current_node);
+                    continue;
                 }
 
-            }
-//            if (last_coordinates.x != 0 && last_coordinates.y != 0) {
-//                cout << "Last coordinates from process " << rank << " were " << last_coordinates.x << " "
-//                     << last_coordinates.y << endl;
-//            }
+                int coordinates_and_costs[5] = {current_node.getCoordinates().x, current_node.getCoordinates().y,
+                                                current_node.getF_cost(), current_node.getCost(), best_solution};
+                MPI_Send(coordinates_and_costs, 5, MPI_INT, 1, 0, MPI_COMM_WORLD);
 
-            // now ask for the path from the best solution
-            // and send the coordinates you want first
-            int coordinates_solution[5] = {best_solution_coordinates.x, best_solution_coordinates.y, 0, 0,
-                                           best_solution};
-            MPI_Send(coordinates_solution, 5, MPI_INT, 1, 2, MPI_COMM_WORLD); // tag 2 for solution sending
+                int other_process_coordinates_and_costs[4];
+                MPI_Status status;
+                MPI_Recv(other_process_coordinates_and_costs, 4, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+
+                // note what other process has visited
+                problem.mark_other_process_visited(other_process_coordinates_and_costs[0],
+                                                   other_process_coordinates_and_costs[1]);
+                F_2 = other_process_coordinates_and_costs[2];
+                problem.other_process_costs[other_process_coordinates_and_costs[0]][other_process_coordinates_and_costs[1]] = other_process_coordinates_and_costs[3];
+
+                // check if other process queue isn't empty
+                if (status.MPI_TAG == 1){
+                    // other process has empty queue, now we have to start the communication for the path transfer
+                    break;
+                }
+                problem.expand_problem(current_node);
+
+            }
+            // one or both processes has finished, so now we have to send the best coordinates
+            int best_coordinates_costs[5] = {best_solution_coordinates.x, best_solution_coordinates.y, 0, 0, best_solution};
+            MPI_Send(best_coordinates_costs, 5, MPI_INT, 1, 1, MPI_COMM_WORLD); // TAG == 1 means my or the other process has finished
 
             // now wait to receive the path
             int other_process_path_len;
@@ -229,15 +167,16 @@ int main() {
             MPI_Recv(&other_process_path[0], other_process_path_len, MPI_INT, 1, 2, MPI_COMM_WORLD,
                      MPI_STATUS_IGNORE);
 
+            // get other process cost
+            int other_process_cost;
+            MPI_Recv(&other_process_cost, 1, MPI_INT, 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
             // cost of this part of the solution
             Path path = problem.find_in_explored_nodes(best_solution_coordinates.x, best_solution_coordinates.y);
             int cost =
                     path.getTotalCost() - map[best_solution_coordinates.x][best_solution_coordinates.y];
             int path_len = path.getPathLen();
             int total_path_len = path_len + other_process_path_len / 2 - 1;
-
-            int other_process_cost;
-            MPI_Recv(&other_process_cost, 1, MPI_INT, 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             int final_cost = cost + other_process_cost + map[goal.x][goal.y];
 
@@ -247,18 +186,16 @@ int main() {
 
             double t2 = MPI_Wtime();
             cout << "Time difference " << t2 - t1 << endl;
+        }
+        else{
+            // process 2
+            int best_solution = std::numeric_limits<int>::max();
+            int F_1 = 0;
+            Coordinates best_solution_coordinates = Coordinates{0, 0};
+            bool first_process_finished = false;
 
-        } else {
             Astar_search problem = Astar_search(width, height, goal, start, map);
             problem.initialize();
-            int F_1 = 0;
-            //unsigned int g_1 = 0;
-            Coordinates best_solution_coordinates = Coordinates{0, 0};
-
-            int best_solution = std::numeric_limits<int>::max();
-
-            // can happen that its queue is empty, but the other process is still working?
-            // so we need to wait for the other process to finish
 
             while (!problem.queue.empty()) {
                 Node current_node = problem.take_first_from_queue();
@@ -284,34 +221,21 @@ int main() {
                 MPI_Status status;
                 MPI_Recv(other_process_coordinates_costs, 5, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
-                if (status.MPI_TAG == 1) {
-                    // update you best solution
+                problem.mark_other_process_visited(other_process_coordinates_costs[0],
+                                                   other_process_coordinates_costs[1]);
 
-                    problem.mark_other_process_visited(other_process_coordinates_costs[0],
-                                                       other_process_coordinates_costs[1]);
-                    F_1 = other_process_coordinates_costs[2];
+                F_1 = other_process_coordinates_costs[2];
 
-                    // assign g1 to appropriate place
-                    problem.other_process_costs[other_process_coordinates_costs[0]][other_process_coordinates_costs[1]] = other_process_coordinates_costs[3];
-                    best_solution = other_process_coordinates_costs[4];
-                    // we got here, so now we know it is ok to explore current solution
+                // assign g1 to appropriate place
+                problem.other_process_costs[other_process_coordinates_costs[0]][other_process_coordinates_costs[1]] = other_process_coordinates_costs[3];
+                best_solution = other_process_coordinates_costs[4];
+                // we got here, so now we know it is ok to explore current solution
 
-                    // mark state visited
-                    problem.mark_visited(current_node.getCoordinates().x, current_node.getCoordinates().y);
-                    problem.explored_nodes.push_back(make_shared<Node>(current_node));
+                if(status.MPI_TAG == 1){
+                    // first process has finished, so we have to start the communication for the path transfer
 
-                    int coordinates_and_costs[4] = {current_node.getCoordinates().x, current_node.getCoordinates().y,
-                                                    current_node.getF_cost(), current_node.getCost()};
-
-                    MPI_Send(coordinates_and_costs, 4, MPI_INT, 0, 0, MPI_COMM_WORLD);
-
-                    problem.expand_problem(current_node);
-
-                } else if (status.MPI_TAG == 2) {
-                    // first node ended and is sending us the best solution coordinates
                     best_solution_coordinates = Coordinates{other_process_coordinates_costs[0],
                                                             other_process_coordinates_costs[1]};
-                    // finish you cycle
 
                     // now we have the coordinates, so we can recreate the path
                     Path path = problem.find_in_explored_nodes(best_solution_coordinates.x,
@@ -323,81 +247,77 @@ int main() {
 
                     MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
                     MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
-                    MPI_Send(&cost, 1, MPI_INT, 0, 3, MPI_COMM_WORLD);
+                    MPI_Send(&cost, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+
+                    first_process_finished = true;
+                    break;
+
+                }
+
+                // mark state visited
+                problem.mark_visited(current_node.getCoordinates().x, current_node.getCoordinates().y);
+                problem.explored_nodes.push_back(make_shared<Node>(current_node));
+
+                int coordinates_and_costs[4] = {current_node.getCoordinates().x, current_node.getCoordinates().y,
+                                                current_node.getF_cost(), current_node.getCost()};
+
+                MPI_Send(coordinates_and_costs, 4, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+                problem.expand_problem(current_node);
+
+            }
+            if(!first_process_finished) {
+                // this process finished sooner, now we have to notify first process
+                int other_process_coordinates_costs[5];
+                MPI_Status status;
+                MPI_Recv(other_process_coordinates_costs, 5, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                if (status.MPI_TAG == 1) {
+                    // first process has finished, so we have to start the communication for the path transfer
+
+                    best_solution_coordinates = Coordinates{other_process_coordinates_costs[0],
+                                                            other_process_coordinates_costs[1]};
+
+                    // now we have the coordinates, so we can recreate the path
+                    Path path = problem.find_in_explored_nodes(best_solution_coordinates.x,
+                                                               best_solution_coordinates.y);
+                    int cost = path.getTotalCost();
+
+                    int path_len = 2 * path.getPathLen();
+                    vector<int> path_send = path.getPathSend();
+
+                    MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                    MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                    MPI_Send(&cost, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
 
                 } else {
+                    int coordinates_and_costs[4] = {best_solution_coordinates.x, best_solution_coordinates.y,
+                                                    0, 0};
 
-                    problem.mark_other_process_visited(other_process_coordinates_costs[0],
-                                                       other_process_coordinates_costs[1]);
-                    F_1 = other_process_coordinates_costs[2];
+                    // notify that we have finished
+                    MPI_Send(coordinates_and_costs, 4, MPI_INT, 0, 1, MPI_COMM_WORLD);
 
-                    // assign g1 to appropriate place
-                    problem.other_process_costs[other_process_coordinates_costs[0]][other_process_coordinates_costs[1]] = other_process_coordinates_costs[3];
+                    // now receive the best coordinates
+                    int best_coordinates_costs[5];
+                    MPI_Recv(best_coordinates_costs, 5, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-                    // we got here, so now we know it is ok to explore current solution
+                    best_solution_coordinates = Coordinates{best_coordinates_costs[0], best_coordinates_costs[1]};
 
-                    // mark state visited
-                    problem.mark_visited(current_node.getCoordinates().x, current_node.getCoordinates().y);
-                    problem.explored_nodes.push_back(make_shared<Node>(current_node));
+                    // now we have the coordinates, so we can recreate the path
+                    Path path = problem.find_in_explored_nodes(best_solution_coordinates.x,
+                                                               best_solution_coordinates.y);
+                    int cost = path.getTotalCost();
 
-                    int coordinates_and_costs[4] = {current_node.getCoordinates().x, current_node.getCoordinates().y,
-                                                    current_node.getF_cost(), current_node.getCost()};
+                    int path_len = 2 * path.getPathLen();
+                    vector<int> path_send = path.getPathSend();
 
-                    MPI_Send(coordinates_and_costs, 4, MPI_INT, 0, 0, MPI_COMM_WORLD);
+                    MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                    MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
+                    MPI_Send(&cost, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
 
-                    problem.expand_problem(current_node);
                 }
-            }
-            // now we got our branch empty, so we need to wait for the other process
-            // to send us final matching coordinates to recreate the path
-
-            // but we have to receive first and then send info about our finish
-            int other_process_coordinates_costs[5];
-            MPI_Status status;
-            MPI_Recv(other_process_coordinates_costs, 5, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            if (status.MPI_TAG == 2) {
-                best_solution_coordinates = Coordinates{other_process_coordinates_costs[0],
-                                                        other_process_coordinates_costs[1]};
-                // finish you cycle
-
-                // now we have the coordinates, so we can recreate the path
-                Path path = problem.find_in_explored_nodes(best_solution_coordinates.x,
-                                                           best_solution_coordinates.y);
-                int cost = path.getTotalCost();
-
-                int path_len = 2 * path.getPathLen();
-                vector<int> path_send = path.getPathSend();
-
-                MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
-                MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
-                MPI_Send(&cost, 1, MPI_INT, 0, 3, MPI_COMM_WORLD);
-            } else {
-                // now you have to inform the process about that you've finished
-                int coordinates_and_costs[4] = {0, 0, 0, 0};
-                MPI_Send(coordinates_and_costs, 4, MPI_INT, 0, 2, MPI_COMM_WORLD);
-
-                // now receive best solution coordinates
-                int other_process_coordinates_costs[5];
-                MPI_Recv(other_process_coordinates_costs, 5, MPI_INT, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-                best_solution_coordinates = Coordinates{other_process_coordinates_costs[0],
-                                                        other_process_coordinates_costs[1]};
-                // now we have the coordinates, so we can recreate the path
-                Path path = problem.find_in_explored_nodes(best_solution_coordinates.x,
-                                                           best_solution_coordinates.y);
-                int cost = path.getTotalCost();
-
-                int path_len = 2 * path.getPathLen();
-                vector<int> path_send = path.getPathSend();
-
-                MPI_Send(&path_len, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
-                MPI_Send(&path_send[0], path_len, MPI_INT, 0, 2, MPI_COMM_WORLD);
-                MPI_Send(&cost, 1, MPI_INT, 0, 3, MPI_COMM_WORLD);
             }
         }
     }
-
-
     MPI_Finalize();
     return 0;
 }
