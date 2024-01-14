@@ -9,6 +9,7 @@ Astar_search::Astar_search(int width, int height, Coordinates start, Coordinates
     this->visited = vector<vector<bool>>(this->height, vector<bool>(this->width, false));
     this->other_process_visited = vector<vector<bool>>(this->height, vector<bool>(this->width, false));
     this->queue = priority_queue<Node>();
+    this->other_process_costs = vector<vector<int>>(this->height, vector<int>(this->width, 0));
 }
 
 bool Astar_search::isGoal(Node& node) {
@@ -65,6 +66,10 @@ int Astar_search::cost(Coordinates new_coordinates) {
 int Astar_search::estimate(Coordinates coordinates) {
     //return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
     return abs(goal.x - coordinates.x) + abs(goal.y - coordinates.y);
+}
+
+int Astar_search::estimate_other_process(Coordinates coordinates) {
+    return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
 }
 
 void Astar_search::initialize(){
