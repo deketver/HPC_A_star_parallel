@@ -12,8 +12,9 @@
 using namespace std;
 
 /*
- * This algorithm approach uses only parallelization on 2 processes.
- * Bidirectional search heuristic search.
+ * In this project, we are trying to use HDA*
+ * to calculate the cheapest path from start to goal.
+ * We are using MPI to parallelize the algorithm.
  * */
 void read_matrix(const std::string& filename, std::vector<std::vector<unsigned short>>& matrix) {
     std::ifstream file(filename);
@@ -47,6 +48,11 @@ void read_path(const std::string& filename, Path& path) {
     file.close();
 }
 
+int calculate_hash(int x, int y, int width, int number_processes) {
+    int position = x * width + y + 1;
+    return position % number_processes + 1;
+}
+
 int main() {
     int world_size;
     int rank;
@@ -58,31 +64,63 @@ int main() {
     // get  common rank
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    std::vector<int> input_size = {10, 100, 500, 1000, 1500, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000};
+    std::vector<int> input_size = {10};//, 100, 500, 1000, 1500, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000};
     for (auto& size: input_size) {
         cout << endl;
         cout << "Size is " << size << endl;
 
         // create imput map
-        int width = size;
-        int height = size;
+        int WIDTH = size;
+        int HEIGHT = size;
 
         // create start and goal coordinates
-        Coordinates start = Coordinates{0, 0}; // 0, 5
-        Coordinates goal = Coordinates{size - 1, size - 1};
+        Coordinates START = Coordinates{0, 0}; // 0, 5
+        Coordinates GOAL = Coordinates{size - 1, size - 1};
 
         // read the map from the file
         vector<vector<unsigned short>> map;
         std::ostringstream filename;
-        filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/map_" << width << ".txt";
+        filename << "/home/veronika.deketova/A_star_parralel/HPC_A_star_parallel/datasets/map_" << WIDTH << ".txt";
         read_matrix(filename.str(), map);
 
-        // now different logic based on the rank
-        if (rank == 0){
+        int BEST_SOLUTION = std::numeric_limits<int>::max();
 
+        int initial_coordinates_array[2 * 4];
+
+        if (rank == 0) {
+            // process 0 initiates the search and then sends states to respective processes based on the hash function
+
+            Astar_search problem = Astar_search(WIDTH, HEIGHT, START, GOAL, map);
+            Node start_node = Node(START, 0, 0, Action{0, 0}, nullptr);
+            auto new_nodes = problem.expand_problem(start_node);
+
+            for( int i = 0; i < new_nodes.size(); i++){
+                Node node = *new_nodes[i];
+                Coordinates coordinates = node.getCoordinates();
+                initial_coordinates_array[2 *i] = coordinates.x;
+                initial_coordinates_array[2 *i +1] = coordinates.y;
+            }
+
+        }
+        // broadcast value
+        MPI_Bcast(initial_coordinates_array, 2 * 4, MPI_INT, 0, MPI_COMM_WORLD);
+        if (rank == 0) {
+
+                cout << "Values broadcasted" << endl;
 
         }
         else{
+            for (int i = 0; i < 4; i++){
+                int x = initial_coordinates_array[2 *i];
+                int y = initial_coordinates_array[2 *i +1];
+                int hash = calculate_hash(x, y, WIDTH, world_size);
+                if (hash == rank){
+                    cout << "I am process " << rank << " and I have coordinates " << x << " " << y << endl;
+                }
+                else{
+                    cout << "I am process " << rank << " and those values were not for me" << endl;
+                }
+            }
 
         }
     }

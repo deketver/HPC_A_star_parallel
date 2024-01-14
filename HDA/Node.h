@@ -4,9 +4,9 @@
 using namespace std;
 
 struct Coordinates {
-public:
     int x;
     int y;
+    bool operator==(const Coordinates& other) const;
 };
 
 //struct Action {

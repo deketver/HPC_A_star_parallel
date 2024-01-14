@@ -67,3 +67,7 @@ std::iostream& operator<<(std::iostream& os, Action& action) {
 }
 
 Node::~Node() {}
+
+bool Coordinates::operator==(const Coordinates &other) const {
+    return this->x == other.x && this->y == other.y;
+}

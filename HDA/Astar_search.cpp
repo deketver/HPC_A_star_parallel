@@ -1,15 +1,15 @@
 #include "Astar_search.h"
 
+#include <utility>
+
 Astar_search::Astar_search(int width, int height, Coordinates start, Coordinates goal, vector<vector<unsigned short>> map) {
     this->width = width;
     this->height = height;
     this->start = start;
     this->goal = goal;
-    this->map = map;
+    this->map = std::move(map);
     this->visited = vector<vector<bool>>(this->height, vector<bool>(this->width, false));
-    this->other_process_visited = vector<vector<bool>>(this->height, vector<bool>(this->width, false));
     this->queue = priority_queue<Node>();
-    this->other_process_costs = vector<vector<int>>(this->height, vector<int>(this->width, 0));
 }
 
 bool Astar_search::isGoal(Node& node) {
@@ -68,9 +68,6 @@ int Astar_search::estimate(Coordinates coordinates) {
     return abs(goal.x - coordinates.x) + abs(goal.y - coordinates.y);
 }
 
-int Astar_search::estimate_other_process(Coordinates coordinates) {
-    return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
-}
 
 void Astar_search::initialize(){
     Node const start_node = Node(this->start, 0, 0, Action{ 0, 0 }, nullptr);
@@ -87,28 +84,26 @@ bool Astar_search::check_is_visited(int x, int y){
     return this->visited[x][y];
 }
 
-bool Astar_search::check_is_other_process_visited(int x, int y){
-    return this->other_process_visited[x][y];
-}
 
 void Astar_search::mark_visited(int x, int y){
     this->visited[x][y] = true;
 }
 
-void Astar_search::mark_other_process_visited(int x, int y){
-    this->other_process_visited[x][y] = true;
-}
 
-void Astar_search::expand_problem(Node& current_node){
+vector<shared_ptr<Node>> Astar_search::expand_problem(Node& current_node){
     vector<Action> actions = this->getActions(current_node);
-
+    vector<shared_ptr<Node>> new_nodes;
     for (Action action : actions) {
         Coordinates new_coordinates = this->getResult(current_node.getCoordinates(), action);
         int new_cost = current_node.getCost() + this->cost(new_coordinates);
         int new_f_cost = new_cost + this->estimate(new_coordinates);
         Node new_node = Node(new_coordinates, new_cost, new_f_cost, action, make_shared<Node>(current_node)); //return Path(std::make_shared<Node>(current_node));
-        this->queue.push(new_node);
+        // is this check here ok in this distributed problem?
+        if (!this->check_is_visited(new_coordinates.x, new_coordinates.y)){
+            new_nodes.push_back(make_shared<Node>(new_node));
+        }
     }
+    return new_nodes;
 }
 
 
@@ -154,10 +149,6 @@ Path Astar_search::search() {
         // check if node has been visited, or better
         if (this->visited[current_node.getCoordinates().x][current_node.getCoordinates().y]) {
             continue;
-        }
-
-        if (this->other_process_visited[current_node.getCoordinates().x][current_node.getCoordinates().y]) {
-            cout << "Found match with other process" << endl;
         }
 
         this->visited[current_node.getCoordinates().x][current_node.getCoordinates().y] = true;
