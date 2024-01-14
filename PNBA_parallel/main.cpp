@@ -58,7 +58,7 @@ int main() {
     // get  common rank
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    std::vector<int> input_size = {500, 1000, 1500, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000};
+    std::vector<int> input_size = {10, 100, 500, 1000, 1500, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000};
     for (auto& size: input_size) {
         cout << endl;
         cout << "Size is " << size << endl;
@@ -68,8 +68,8 @@ int main() {
         int height = size;
 
         // create start and goal coordinates
-        Coordinates start = Coordinates{0, 5}; // 0, 5
-        Coordinates goal = Coordinates{size - 16, size - 6};
+        Coordinates start = Coordinates{0, 0}; // 0, 5
+        Coordinates goal = Coordinates{size - 1, size - 1};
 
         // read the map from the file
         vector<vector<unsigned short>> map;
@@ -149,6 +149,7 @@ int main() {
                 // check if other process queue isn't empty
                 if (status.MPI_TAG == 1){
                     // other process has empty queue, now we have to start the communication for the path transfer
+                    cout << "Process 2 finished earlier" << endl;
                     break;
                 }
                 problem.expand_problem(current_node);
@@ -232,6 +233,7 @@ int main() {
                 // we got here, so now we know it is ok to explore current solution
 
                 if(status.MPI_TAG == 1){
+                    cout << "Process 1 finished earlier" << endl;
                     // first process has finished, so we have to start the communication for the path transfer
 
                     best_solution_coordinates = Coordinates{other_process_coordinates_costs[0],
