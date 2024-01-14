@@ -150,9 +150,57 @@ int main() {
                 if (status.MPI_TAG == 1){
                     // other process has empty queue, now we have to start the communication for the path transfer
                     cout << "Process 2 finished earlier" << endl;
+                    // ? try to finish the path?
+                    /****************************/
+                    problem.expand_problem(current_node);
+                    while(!problem.queue.empty()){
+
+                        Node current_node = problem.take_first_from_queue();
+
+                        // node was already visited
+                        if (problem.check_is_visited(current_node.getCoordinates().x, current_node.getCoordinates().y)) {
+                            continue;
+                        }
+
+                        if (current_node.getF_cost() >= best_solution) {
+                            continue;
+                        }
+
+                        if (current_node.getCost() + F_2 - problem.estimate_other_process(current_node.getCoordinates()) >=
+                            best_solution) {
+                            continue;
+                        }
+
+                        // mark as visited state, add to explored nodes
+                        problem.mark_visited(current_node.getCoordinates().x, current_node.getCoordinates().y);
+                        problem.explored_nodes.push_back(make_shared<Node>(current_node));
+
+                        // if the other node has already seen this node
+                        if (problem.check_is_other_process_visited(current_node.getCoordinates().x,
+                                                                   current_node.getCoordinates().y)) {
+
+                            // have a look what was the cost on this node from the other ones perspective
+                            int g_2 = problem.other_process_costs[current_node.getCoordinates().x][current_node.getCoordinates().y];
+                            int final_cost = current_node.getCost() + g_2 + map[goal.x][goal.y];
+
+                            // if this is better then previous solution, update it
+                            if (final_cost < best_solution) {
+                                best_solution = final_cost;
+                                best_solution_coordinates = current_node.getCoordinates();
+                            }
+                            continue;
+                        }
+                        problem.expand_problem(current_node);
+
+                    }
+                    /**************************/
+
                     break;
                 }
-                problem.expand_problem(current_node);
+                else{
+                    problem.expand_problem(current_node);
+                }
+
 
             }
             // one or both processes has finished, so now we have to send the best coordinates
@@ -235,6 +283,7 @@ int main() {
                 if(status.MPI_TAG == 1){
                     cout << "Process 1 finished earlier" << endl;
                     // first process has finished, so we have to start the communication for the path transfer
+
 
                     best_solution_coordinates = Coordinates{other_process_coordinates_costs[0],
                                                             other_process_coordinates_costs[1]};
