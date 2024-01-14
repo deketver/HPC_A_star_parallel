@@ -66,8 +66,6 @@ int main() {
 
     std::vector<int> input_size = {10};//, 100, 500, 1000, 1500, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 3750, 4000};
     for (auto& size: input_size) {
-        cout << endl;
-        cout << "Size is " << size << endl;
 
         // create imput map
         int WIDTH = size;
@@ -85,7 +83,7 @@ int main() {
 
         int BEST_SOLUTION = std::numeric_limits<int>::max();
 
-        int initial_coordinates_array[2 * 4];
+        int initial_coordinates_array[4];
 
         if (rank == 0) {
             // process 0 initiates the search and then sends states to respective processes based on the hash function
@@ -99,11 +97,14 @@ int main() {
                 Coordinates coordinates = node.getCoordinates();
                 initial_coordinates_array[2 *i] = coordinates.x;
                 initial_coordinates_array[2 *i +1] = coordinates.y;
+                cout << " sending coordinate x " << coordinates.x << endl;
+                cout << " sending coordinate y" << coordinates.y << endl;
             }
+           
 
         }
         // broadcast value
-        MPI_Bcast(initial_coordinates_array, 2 * 4, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(initial_coordinates_array, sizeof(initial_coordinates_array), MPI_INT, 0, MPI_COMM_WORLD);
         if (rank == 0) {
 
                 cout << "Values broadcasted" << endl;
