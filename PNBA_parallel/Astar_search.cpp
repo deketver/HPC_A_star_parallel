@@ -9,6 +9,7 @@ Astar_search::Astar_search(int width, int height, Coordinates start, Coordinates
     this->visited = vector<vector<bool>>(this->height, vector<bool>(this->width, false));
     this->other_process_visited = vector<vector<bool>>(this->height, vector<bool>(this->width, false));
     this->queue = priority_queue<Node>();
+    this->other_process_costs = vector<vector<int>>(this->height, vector<int>(this->width, 0));
 }
 
 bool Astar_search::isGoal(Node& node) {
@@ -63,6 +64,11 @@ int Astar_search::cost(Coordinates new_coordinates) {
 }
 
 int Astar_search::estimate(Coordinates coordinates) {
+    //return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
+    return abs(goal.x - coordinates.x) + abs(goal.y - coordinates.y);
+}
+
+int Astar_search::estimate_other_process(Coordinates coordinates) {
     return abs(coordinates.x - this->start.x) + abs(coordinates.y - this->start.y);
 }
 
@@ -124,13 +130,12 @@ void Astar_search::try_match_parent_current_node(Node& current_node,int other_pr
 Path Astar_search::find_in_explored_nodes(int other_process_x, int other_process_y){
     for (shared_ptr<Node> node : this->explored_nodes){
         if (node->getCoordinates().x == other_process_x && node->getCoordinates().y == other_process_y){
-            Path path = Path(*node);
-            cout << "Found node to create path!" << endl;
+            Path path = Path(*node); // Path path
             return path;
         }
     }
     Path path = Path();
-    cout << "No match found" << endl;
+    //cout << "No match found" << endl;
     return path;
 }
 
