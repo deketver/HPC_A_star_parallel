@@ -70,7 +70,7 @@ int Astar_search::estimate(Coordinates coordinates) {
 
 
 void Astar_search::initialize(){
-    Node const start_node = Node(this->start, 0, 0, Action{ 0, 0 }, nullptr);
+    Node const start_node = Node(this->start, 0, 0, nullptr);
     this->queue.push(start_node);
 }
 
@@ -97,7 +97,7 @@ vector<shared_ptr<Node>> Astar_search::expand_problem(Node& current_node){
         Coordinates new_coordinates = this->getResult(current_node.getCoordinates(), action);
         int new_cost = current_node.getCost() + this->cost(new_coordinates);
         int new_f_cost = new_cost + this->estimate(new_coordinates);
-        Node new_node = Node(new_coordinates, new_cost, new_f_cost, action, make_shared<Node>(current_node)); //return Path(std::make_shared<Node>(current_node));
+        Node new_node = Node(new_coordinates, new_cost, new_f_cost, make_shared<Node>(current_node)); //return Path(std::make_shared<Node>(current_node));
         // is this check here ok in this distributed problem?
         if (!this->check_is_visited(new_coordinates.x, new_coordinates.y)){
             new_nodes.push_back(make_shared<Node>(new_node));
@@ -135,7 +135,7 @@ Path Astar_search::find_in_explored_nodes(int other_process_x, int other_process
 }
 
 Path Astar_search::search() {
-    Node const start_node = Node(this->start, 0, 0, Action{ 0, 0 }, nullptr);
+    Node const start_node = Node(this->start, 0, 0, nullptr);
     this->queue.push(start_node);
 
     // keep track of visited nodes
@@ -166,11 +166,11 @@ Path Astar_search::search() {
             Coordinates new_coordinates = this->getResult(current_node.getCoordinates(), action);
             int new_cost = current_node.getCost() + this->cost(new_coordinates);
             int new_f_cost = new_cost + this->estimate(new_coordinates);
-            Node new_node = Node(new_coordinates, new_cost, new_f_cost, action, make_shared<Node>(current_node)); //return Path(std::make_shared<Node>(current_node));
+            Node new_node = Node(new_coordinates, new_cost, new_f_cost, make_shared<Node>(current_node)); //return Path(std::make_shared<Node>(current_node));
             this->queue.push(new_node);
         }
     }
     // no solution found
-    Node node = Node(Coordinates{ -1, -1 }, -1, -1, Action{ 0, 0 }, nullptr);
+    Node node = Node(Coordinates{ -1, -1 }, -1, -1, nullptr);
     return Path(node);
 }

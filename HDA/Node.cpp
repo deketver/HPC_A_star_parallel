@@ -3,11 +3,10 @@
 
 using namespace std;
 
-Node::Node(Coordinates coordinates, int cost, int f_cost, Action action, shared_ptr<Node> parent) {
+Node::Node(Coordinates coordinates, int cost, int f_cost, shared_ptr<Node> parent) {
     this->coordinates = coordinates;
     this->cost = cost;
     this->f_cost = f_cost;
-    this->action = action;
     this->parent = parent;
 //    if (parent != nullptr){
 //        cout << "Parrent was" << parent << endl;
@@ -29,9 +28,6 @@ int Node::getF_cost() const {
     return this->f_cost;
 }
 
-Action Node::getAction() const {
-    return this->action;
-}
 
 shared_ptr<Node> Node::getParent() const {
     return this->parent;
