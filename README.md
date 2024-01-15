@@ -1,6 +1,6 @@
-# Parallel A* Graph Aearch Project
+# Parallel A* Graph Search Project
 
-University project about parallelization of A\* algorithm for distributed computing modeles
+University project about parallelization of A\* algorithm for distributed computing models
 without shared memory via MPI (Message Passing Interface).
 
 ## Project structure overview
