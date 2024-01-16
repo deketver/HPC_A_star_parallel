@@ -84,6 +84,9 @@ int main() {
         int BEST_SOLUTION = std::numeric_limits<int>::max();
 
         Astar_search problem = Astar_search(WIDTH, HEIGHT, START, GOAL, map);
+        int count_sent = 0;
+        int count_received = 0;
+        bool FINISHED = false;
 
         if (rank == 0) {
             // process 0 initiates the search and then sends states to respective processes based on the hash function
@@ -98,12 +101,18 @@ int main() {
                 int hash = calculate_hash(x, y, WIDTH, world_size);
                 int coordinates_cost[4] = {x, y, new_nodes[i]->getCost(), BEST_SOLUTION};
                 MPI_Send(&coordinates_cost, 4, MPI_INT, hash, 0, MPI_COMM_WORLD);
+                count_sent++;
             }
         }
         else{
             // inicialization step for other processes
             int coordinates_cost[4];
-            MPI_Recv(&coordinates_cost, 4, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Status status;
+            MPI_Recv(&coordinates_cost, 4, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+            if(status.MPI_TAG == 2){
+                // finish you search
+                break;
+            }
             Coordinates coordinates = Coordinates{coordinates_cost[0], coordinates_cost[1]};
             BEST_SOLUTION = coordinates_cost[3];
             int f_cost_estimate = problem.estimate(coordinates);
@@ -129,23 +138,61 @@ int main() {
                 }
             }
         }
-        while(true){
+        while(!FINISHED){
             if(rank == 0){
                 // try to switch receive and send messages
                 // try to receive first any source with any tag and then proceed with the send
                 int receive_coordinates_cost[3];
                 MPI_Status status;
                 MPI_Recv(&receive_coordinates_cost, 3, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-                if(status.MPI_TAG == 1){
+                count_received++;
+                while(status.MPI_TAG == 1){
                     // update best value
                     if(receive_coordinates_cost[2] < BEST_SOLUTION){
                         BEST_SOLUTION = receive_coordinates_cost[2];
                     }
-                    MPI_Recv(&receive_coordinates_cost, 3, MPI_INT, status.MPI_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                    if (count_received == count_sent){
+                        int message[3] = {0, 0, 0};
+                        MPI_Send(&message, 3, MPI_INT, status.MPI_SOURCE, 2, MPI_COMM_WORLD);
+                        FINISHED = true;
+                        break;
+                    }
+                    MPI_Recv(&receive_coordinates_cost, 3, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                    count_received++;
 
                 }
-
-
+//                if(status.MPI_TAG == 1){
+//                    // update best value
+//                    if(receive_coordinates_cost[2] < BEST_SOLUTION){
+//                        BEST_SOLUTION = receive_coordinates_cost[2];
+//                    }
+//                    if (count_received == count_sent){
+//                        int message[3] = {0, 0, 0};
+//                        MPI_Send(&message, 3, MPI_INT, status.MPI_SOURCE, 2, MPI_COMM_WORLD);
+//                        break;
+//                    }
+//                    MPI_Recv(&receive_coordinates_cost, 3, MPI_INT, status.MPI_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+//                    count_received++;
+//
+//                }
+                if(FINISHED){
+                    break;
+                }
+                // calculate hash
+                int x = receive_coordinates_cost[0];
+                int y = receive_coordinates_cost[1];
+                int send_data[4] = {x, y, receive_coordinates_cost[2], BEST_SOLUTION};
+                int hash = calculate_hash(x, y, WIDTH, world_size);
+                MPI_Send(&receive_coordinates_cost, 3, MPI_INT, hash, 0, MPI_COMM_WORLD);
+                count_sent++;
+//                if(count_sent == count_received){
+//                    int message[3] = {0, 0, 0};
+//                    cout << "Finishing, the best solution was: " << BEST_SOLUTION << endl;
+//                    for(int i = 0; i < world_size; i++){
+//                        MPI_Send(&message, 3, MPI_INT, i, 2, MPI_COMM_WORLD);
+//                    }
+//                    break;
+//                }
 
             }
             else{
@@ -171,7 +218,7 @@ int main() {
                             int hash = calculate_hash(x, y, WIDTH, world_size);
                             if (hash != rank){
                                 int send_coordinates_cost[3] = {x, y, new_nodes[i]->getCost()};
-                                MPI_Send(&send_coordinates_cost, 3, MPI_INT, hash, 0, MPI_COMM_WORLD);
+                                MPI_Send(&send_coordinates_cost, 3, MPI_INT, 0, 0, MPI_COMM_WORLD);
                             }
                             else{
                                 problem.queue.push(*new_nodes[i]);
@@ -198,10 +245,13 @@ int main() {
                     int x = new_nodes[i]->getCoordinates().x;
                     int y = new_nodes[i]->getCoordinates().y;
                     int hash = calculate_hash(x, y, WIDTH, world_size);
-                    int coordinates_cost[3] = {x, y, new_nodes[i]->getCost()};
-                    MPI_Send(&coordinates_cost, 3, MPI_INT, hash, 0, MPI_COMM_WORLD);
-                    cout << "I am process " << rank << " and I sent coordinates " << x << " " << y << " to process " << hash
-                         << endl;
+                    if (hash != rank){
+                        int send_coordinates_cost[3] = {x, y, new_nodes[i]->getCost()};
+                        MPI_Send(&send_coordinates_cost, 3, MPI_INT, 0, 0, MPI_COMM_WORLD);
+                    }
+                    else{
+                        problem.queue.push(*new_nodes[i]);
+                    }
                 }
 
             }
